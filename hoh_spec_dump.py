@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 @author: Jonathan Hoh (Based off of kidpy by Adrian Sinclair)
-Initial template for photo-mixer readout on ROACH2 system with 512MHz digizers
+Readout interface for hoh_spec.fpg spectrometer for Allan Variance use
 
 """
 import casperfpga
@@ -13,8 +13,8 @@ import csv
 
 katcp_port=7147
 roach = '192.168.40.79'
-firmware_fpg = 'lock_in_v2_2021_Apr_29_1629.fpg'
-#firmware_fpg = 'lock_in_v1_2021_Mar_25_1417.fpg'
+firmware_fpg = 'hoh_spec.fpg'
+
 fpga = casperfpga.katcp_fpga.KatcpFpga(roach, timeout = 3.)
 time.sleep(1)
 if (fpga.is_connected() == True):
@@ -26,26 +26,15 @@ if (fpga.upload_to_ram_and_program(firmware_fpg) == True):
     print 'Uploaded firmware'
 else:
     print 'Failed to upload firmware or already uploaded'
-
-# Initializing registers
-
+    
+    # Initializing registers
 fpga.write_int('fft_shift', 2**9)
-fpga.write_int('mux_select', 0) # 0 for constant, 1 for multiply
-fpga.write_int('cordic_freq', 2) # 
-fpga.write_int('sync_accum_len', 2**23) # 2**19/2**9 = 1024 accumulations
+fpga.write_int('sync_accum_len', 2**23) # 2**23/2**9 = 16,384 accumulations
 fpga.write_int('sync_accum_reset', 0) #
 fpga.write_int('sync_accum_reset', 1) #
 fpga.write_int('sync_accum_reset', 0) #
 fpga.write_int('start_dac', 0) #
 fpga.write_int('start_dac', 1) #
-
-sec_convert = (0.0625)**(-1) #number of 2^24 accum dumps needed for one sec of integration
-
-
-#t_1ms = int(round(1/ms_convert))
-#t_30ms = int(round(30/ms_convert))
-#t_300ms = int(round(300/ms_convert))
-t_1s = 16
 
 plt.ion()
 
@@ -71,7 +60,7 @@ def plotFFT():
             fig.canvas.draw()
             count += 1
         return
-
+        
 def plotAccum():
         # Generates a plot stream from read_avgIQ_snap(). To view, run plotAvgIQ.py in a separate terminal
         fig = plt.figure(figsize=(10.24,7.68))
@@ -112,6 +101,7 @@ def read_accum_snap():
 		#I = accum_data[0::2]
         #Q = accum_data[1::2]
         return accum_data
+        
 def plotADC():
         # Plots the ADC timestream
         
@@ -162,7 +152,7 @@ def plotADC():
 def dataCollect(chan1, chan2, chan3, chan4, lines):
 	count1 = 0
 	rate = 16
-	file = open('lock_in_accum.csv', 'w')
+	file = open('hoh_spec_data.csv', 'w')
 	writer = csv.writer(file)
 	seconds_per_line = 10
 	cols = rate * seconds_per_line
@@ -192,7 +182,3 @@ def dataCollect(chan1, chan2, chan3, chan4, lines):
         writer.writerow(vals4)
 	    count1 += 1
 	file.close()
-	
-    
-    
-        
