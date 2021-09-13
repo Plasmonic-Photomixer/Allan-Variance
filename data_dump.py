@@ -32,7 +32,7 @@ else:
 fpga.write_int('fft_shift', 2**9)
 fpga.write_int('mux_select', 0) # 0 for constant, 1 for multiply
 fpga.write_int('cordic_freq', 2) # 
-fpga.write_int('sync_accum_len', 2**24-1) # 2**19/2**9 = 1024 accumulations
+fpga.write_int('sync_accum_len', 2**19-1) # 2**19/2**9 = 1024 accumulations
 fpga.write_int('sync_accum_reset', 0) #
 fpga.write_int('sync_accum_reset', 1) #
 fpga.write_int('sync_accum_reset', 0) #
@@ -92,12 +92,12 @@ def plotAccum():
         count = 0
         stop = 10000
         while(count < stop):
-            I, Q = read_accum_snap()
-            I = I[2:]
-            Q = Q[2:]
-            mags =(np.sqrt(I**2 + Q**2))[:1016]
+            data = read_accum_snap()
+            #I = I[2:]
+            #Q = Q[2:]
+            #mags =(np.sqrt(I**2 + Q**2))[:1016]
             #mags = 20*np.log10(mags/np.max(mags))[:1016]
-            mags = 10*np.log10(mags+1e-20)[:1016]
+            mags = 10*np.log10(data+1e-20)[:1016]
             line1.set_ydata(mags)
             fig.canvas.draw()
             count += 1
@@ -107,14 +107,14 @@ def read_accum_snap():
         # 2**9 64bit wide 32bits for mag0 and 32bits for mag1    
         fpga.write_int('accum_snap_accum_snap_ctrl', 0)
         fpga.write_int('accum_snap_accum_snap_ctrl', 1)
-        accum_data = np.fromstring(fpga.read('accum_snap_accum_snap_bram', 16*2**9), dtype = '>i').astype('float')
+        accum_data = np.fromstring(fpga.read('accum_snap_accum_snap_bram', 16*2**9), dtype = '>i').astype('float')[1::2]
         #data type for accum_data may have to be wonked with
 		#I = accum_data[0::2]
         #Q = accum_data[1::2]
         return accum_data
-
 def plotADC():
         # Plots the ADC timestream
+        
         fig = plt.figure(figsize=(10.24,7.68))
         plot1 = fig.add_subplot(211)
         line1, = plot1.plot(np.arange(0,2048), np.zeros(2048), 'r-', linewidth = 2)
@@ -162,23 +162,28 @@ def plotADC():
 def dataCollect(chan, lines):
 	count1 = 0
 	rate = 16
-	file = open('spec_data.csv', 'w')
+	file = open('spec_data_713.csv', 'w')
 	writer = csv.writer(file)
-	seconds_per_line = 1
+	seconds_per_line = 10
 	cols = rate * seconds_per_line
 	tau = np.logspace(-1, 3, 50)
-	while (count1 < lines)	    
+	writer.writerow([chan])
+	while (count1 < lines):
+	    print('we are %d/1000 of the way through this shit'%(count1))	    
 	    vals = np.zeros(cols)
 	    count2 = 0
 	    while (count2 < cols):
-	        fpga.write_int('accum_snap_accum_snap_ctrl', 0)
-	        fpga.write_int('accum_snap_accum_snap_ctrl', 1)
-	        accum_data = np.fromstring(fpga.read('accum_snap_accum_snap_bram', 16*2**9), dtype = '>i').astype('float')
+	        accum_data = read_accum_snap()
+	        mags = 10*np.log10(accum_data+1e-20)[:1016]
+	        #print(mags)
 	        val = accum_data[chan]
 	        vals[count2] = val
+	        #print('this is column number %d with a value of %d'%(count2, val))
 	        count2 += 1
 	    writer.writerow(vals)
-	file.close()	
+	    count1 += 1
+	file.close()
+	
     
     
         
