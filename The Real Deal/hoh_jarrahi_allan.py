@@ -18,7 +18,20 @@ def load_data(csv_file):
     num_sec = len(new_df.columns)/16        
     timestream = new_df.values[0]
     return (timestream, num_sec)
-
+    
+def load_multi_chan(csv_file, channels):
+    df=pd.read_csv(csv_file, #skiprows = [1]
+    )
+    new_df=pd.DataFrame([df.iloc[0].to_list()],columns=df.columns)
+    for x in range(int((df.shape[0]-1))):
+        sample_df=pd.DataFrame([df.iloc[(x+1)].to_list()],columns=df.iloc[x+1].to_list())
+        new_df=pd.concat([new_df,sample_df ],axis=1)
+    num_sec = len(new_df.columns)/(16*channels)        
+    timestreams = []
+    for i in range(channels-1):
+        timestreams.append(new_df.values[0][i::channels])
+    return (timestreams, num_sec, channels)
+    
 def plot_timestream(csv_file):
     (timestream, num_sec) = load_data(csv_file)
     plt.plot(timestream)
