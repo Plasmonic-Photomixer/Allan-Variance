@@ -22,14 +22,28 @@ def load_data(csv_file):
 def load_multi_chan(csv_file, channels):
     df=pd.read_csv(csv_file, #skiprows = [1]
     )
-    new_df=pd.DataFrame([df.iloc[0].to_list()],columns=df.columns)
-    for x in range(int((df.shape[0]-1))):
+    new_df
+    new_df1=pd.DataFrame([df.iloc[0].to_list()],columns=df.columns)
+    new_df2=pd.DataFrame([df.iloc[1].to_list()],columns=df.columns)
+    new_df3=pd.DataFrame([df.iloc[2].to_list()],columns=df.columns)
+    new_df4=pd.DataFrame([df.iloc[3].to_list()],columns=df.columns)
+    x = 3
+    while x <= (int((df.shape[0]) - 4)):
         sample_df=pd.DataFrame([df.iloc[(x+1)].to_list()],columns=df.iloc[x+1].to_list())
-        new_df=pd.concat([new_df,sample_df ],axis=1)
-    num_sec = len(new_df.columns)/(16*channels)        
-    timestreams = []
-    for i in range(channels-1):
-        timestreams.append(new_df.values[0][i::channels])
+        new_df1=pd.concat([new_df1,sample_df ],axis=1)
+        sample_df=pd.DataFrame([df.iloc[(x+2)].to_list()],columns=df.iloc[x+2].to_list())
+        new_df2=pd.concat([new_df2,sample_df ],axis=1)
+        sample_df=pd.DataFrame([df.iloc[(x+3)].to_list()],columns=df.iloc[x+3].to_list())
+        new_df3=pd.concat([new_df3,sample_df ],axis=1)
+        sample_df=pd.DataFrame([df.iloc[(x+4)].to_list()],columns=df.iloc[x+4].to_list())
+        new_df4=pd.concat([new_df4,sample_df ],axis=1)
+        
+        x += 4
+    num_sec = len(new_df1.columns)/(16)        
+    #timestreams = []
+    #for i in range(channels-1):
+        #timestreams.append(new_df.values[0][i::channels])
+    timestreams = [new_df1, new_df2, new_df3, new_df4]    
     return (timestreams, num_sec)
     
     
@@ -97,7 +111,7 @@ def allan_plot(csv_file, res):
 def allan_compare(csv1, csv2, channels, chan_index, channel_real = 'null', res = 30):
     # read in files
     (timestreams1, num_sec) = load_multi_chan(csv1, channels)
-    timesteam1 = timestreams1[chan_index]
+    timestream1 = timestreams1[chan_index]
     
     timestream2 = load_multi_chan(csv2, channels)[0][chan_index]
 
@@ -118,7 +132,7 @@ def allan_compare(csv1, csv2, channels, chan_index, channel_real = 'null', res =
     # Plotting the Allan Variance ####
     plt.loglog(tau2, avars1) #Plot the allan variance data
     plt.loglog(tau3, avars2)
-    plt.loglog(tau2,white_line)    #Plot the white noise line for comparison
+    plt.loglog(tau2,white_line1)    #Plot the white noise line for comparison
     plt.loglog(tau3,white_line2)
     plt.errorbar(tau2, avars1, yerr = 2*(avars1[::]/np.sqrt((num_sec/tau2[::]))), ecolor='g')
     plt.errorbar(tau3, avars2, yerr = 2*(avars2[::]/np.sqrt((num_sec/tau3[::]))), ecolor='g')
