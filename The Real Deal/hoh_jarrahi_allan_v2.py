@@ -22,13 +22,13 @@ def load_data(csv_file):
 def load_multi_chan(csv_file, channels):
     df=pd.read_csv(csv_file, #skiprows = [1]
     )
-    new_df
+
     new_df1=pd.DataFrame([df.iloc[0].to_list()],columns=df.columns)
     new_df2=pd.DataFrame([df.iloc[1].to_list()],columns=df.columns)
     new_df3=pd.DataFrame([df.iloc[2].to_list()],columns=df.columns)
     new_df4=pd.DataFrame([df.iloc[3].to_list()],columns=df.columns)
     x = 3
-    while x <= (int((df.shape[0]) - 4)):
+    while x <= (int((df.shape[0]) - 5)):
         sample_df=pd.DataFrame([df.iloc[(x+1)].to_list()],columns=df.iloc[x+1].to_list())
         new_df1=pd.concat([new_df1,sample_df ],axis=1)
         sample_df=pd.DataFrame([df.iloc[(x+2)].to_list()],columns=df.iloc[x+2].to_list())
@@ -111,7 +111,7 @@ def allan_plot(csv_file, res):
 def allan_compare(csv1, csv2, channels, chan_index, channel_real = 'null', res = 30):
     # read in files
     (timestreams1, num_sec) = load_multi_chan(csv1, channels)
-    timestream1 = timestreams1[chan_index]
+    timestream1 = timestreams1[0][chan_index]
     
     timestream2 = load_multi_chan(csv2, channels)[0][chan_index]
 
