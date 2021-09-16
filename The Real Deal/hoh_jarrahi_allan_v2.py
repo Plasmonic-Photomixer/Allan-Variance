@@ -43,7 +43,16 @@ def load_multi_chan(csv_file, channels):
     #timestreams = []
     #for i in range(channels-1):
         #timestreams.append(new_df.values[0][i::channels])
-    timestreams = [new_df1, new_df2, new_df3, new_df4]    
+    #file1 = open('lock_in_accum.csv', 'w')
+	#writer1 = csv.writer(file)
+    #file2 = open('lock_in_accum.csv', 'w')
+	#writer2 = csv.writer(file)
+    #file3 = open('lock_in_accum.csv', 'w')
+	#writer3 = csv.writer(file)
+    #file4 = open('lock_in_accum.csv', 'w')
+	#writer4 = csv.writer(file)
+    
+    timestreams = [np.array(new_df1.values), np.array(new_df2.values), np.array(new_df3.values), np.array(new_df4.values)]    
     return (timestreams, num_sec)
     
     
@@ -111,9 +120,9 @@ def allan_plot(csv_file, res):
 def allan_compare(csv1, csv2, channels, chan_index, channel_real = 'null', res = 30):
     # read in files
     (timestreams1, num_sec) = load_multi_chan(csv1, channels)
-    timestream1 = timestreams1[0][chan_index]
+    timestream1 = timestreams1[chan_index][0]
     
-    timestream2 = load_multi_chan(csv2, channels)[0][chan_index]
+    timestream2 = load_multi_chan(csv2, channels)[0][chan_index][0]
 
     # set up constants for allan variance
     tau = np.logspace(0, 3, res)
@@ -122,7 +131,7 @@ def allan_compare(csv1, csv2, channels, chan_index, channel_real = 'null', res =
     # now take allan variance of both datasets    
     (tau2, adevs1, adev_err1, n1) = AT.oadev(timestream1, rate, data_type="freq", taus=tau)
     avars1 = np.square(adevs1) # square allan dev to get allan var
-    (tau3, adevs2, adev_err2, n2) = AT.oadev(timestream1, rate, data_type="freq", taus=tau)
+    (tau3, adevs2, adev_err2, n2) = AT.oadev(timestream2, rate, data_type="freq", taus=tau)
     avars2 = np.square(adevs2) # square allan dev to get allan var
 
     # Make white noise t^-1 line for both datasets 
