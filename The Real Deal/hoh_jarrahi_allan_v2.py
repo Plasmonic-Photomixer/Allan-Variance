@@ -60,6 +60,13 @@ def plot_timestream(csv_file):
     (timestream, num_sec) = load_data(csv_file)
     plt.plot(timestream)
     plt.show()
+    
+def compare_timestream(csv1, csv2, channels):
+     (timestream1, num_sec1) = load_multi_chan(csv1, channels)
+     (timestream2, num_sec2) = load_multi_chan(csv2, channels)
+     diff = timestream1[0][0]/timestream2[0][0]
+     plt.plot(diff)
+     plt.show()
 ##################################################
 #                                                #
 # Allan Variance Plotting Function:              #
@@ -152,6 +159,28 @@ def allan_compare(csv1, csv2, channels, chan_index, channel_real = 'null', res =
     plt.ylabel('Power^2 (arbitrary(?) units)')
     plt.show()
     
+def plot_differential(csv1, csv2, channels, chan_index, channel_real = 'null', res = 30):   
+    # read in files
+    (timestreams1, num_sec) = load_multi_chan(csv1, channels)
+    timestream1 = timestreams1[chan_index][0]
     
+    timestream2 = load_multi_chan(csv2, channels)[0][chan_index][0]
+
+    # set up constants for allan variance
+    tau = np.logspace(0, 3, res)
+    rate = 16 # 1/16 seconds of integration per sample
     
+    # now take allan variance of both datasets    
+    (tau2, adevs1, adev_err1, n1) = AT.oadev(timestream1, rate, data_type="freq", taus=tau)
+    avars1 = np.square(adevs1) # square allan dev to get allan var
+    (tau3, adevs2, adev_err2, n2) = AT.oadev(timestream2, rate, data_type="freq", taus=tau)
+    avars2 = np.square(adevs2) # square allan dev to get allan var
     
+    diff = (avars1/avars2)
+    plt.loglog(tau3, diff)
+
+    
+    plt.title('Allan variance difference between lock in and hoh spec for channel %d'%(channel_real))
+    plt.xlabel('Integration Times (s)')
+    plt.ylabel('Power^2 (arbitrary(?) units)')
+    plt.show()
