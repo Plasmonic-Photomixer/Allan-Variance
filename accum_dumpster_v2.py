@@ -13,7 +13,8 @@ import csv
 
 katcp_port=7147
 roach = '192.168.40.79'
-firmware_fpg = 'lock_in_v2_2021_Apr_29_1629.fpg'
+#firmware_fpg = 'lock_in_v2_2021_Aug_11_1505.fpg'
+firmware_fpg = 'liss_v3_11_2022.fpg'
 #firmware_fpg = 'hoh_spec.fpg'
 fpga = casperfpga.katcp_fpga.KatcpFpga(roach, timeout = 3.)
 time.sleep(1)
@@ -30,12 +31,12 @@ else:
 # Initializing registers
 
 fpga.write_int('fft_shift', 2**9)
-fpga.write_int('mux_select', 0) # 0 for execution, 1 for testing purposes
-fpga.write_int('cordic_freq', 2) # 
-fpga.write_int('sync_accum_len', 2**24-1) # 2**19/2**9 = 1024 accumulations
-fpga.write_int('sync_accum_reset', 0) #
-fpga.write_int('sync_accum_reset', 1) #
-fpga.write_int('sync_accum_reset', 0) #
+#fpga.write_int('mux_select', 0) # 0 for execution, 1 for testing purposes
+fpga.write_int('cordic_freq', 1) # 
+fpga.write_int('accumulationsync_accum_len', 2**15) # 2**19/2**9 = 1024 accumulations
+fpga.write_int('accumulationsync_accum_reset', 0) #
+fpga.write_int('accumulationsync_accum_reset', 1) #
+fpga.write_int('accumulationsync_accum_reset', 0) #
 fpga.write_int('start_dac', 0) #
 fpga.write_int('start_dac', 1) #
 
@@ -52,7 +53,8 @@ plt.ion()
 def plotFFT():
         fig = plt.figure()
         plot1 = fig.add_subplot(111)
-        line1, = plot1.plot(np.arange(0,1024,2), np.zeros(1024/2), '#FF4500', alpha = 0.8)
+        #line1, = plot1.plot(np.arange(0,1024,2), np.zeros(1024/2), '#FF4500', alpha = 0.8)
+        line1, = plot1.plot(np.arange(0,1024,1), np.zeros(1024), '#FF4500', alpha = 0.8)
         line1.set_marker('.')
         plt.grid()
         plt.ylim(-10, 100)
@@ -63,14 +65,21 @@ def plotFFT():
             fpga.write_int('fft_snap_fft_snap_ctrl',0)
             fpga.write_int('fft_snap_fft_snap_ctrl',1)
             fft_snap = (np.fromstring(fpga.read('fft_snap_fft_snap_bram',(2**9)*8),dtype='>i2')).astype('float')
-            I0 = fft_snap[0::4]
-            Q0 = fft_snap[1::4]
+            #I0 = fft_snap[0::4]
+            #Q0 = fft_snap[1::4]
+            I0 = fft_snap[0::2]
+            Q0 = fft_snap[1::2]
             mag0 = np.sqrt(I0**2 + Q0**2)
             mag0 = 20*np.log10(mag0)
             line1.set_ydata(mag0)
             fig.canvas.draw()
             count += 1
         return
+        
+def save_FFT():
+	fpga.write_int('fft_snap_fft_snap_ctrl',0)
+	fpga.write_int('fft_snap_fft_snap_ctrl',1)
+	fft_snap = (np.fromstring(fpga.read('fft_snap_fft_snap_bram',(2**9)*8),dtype='>i2')).astype('float')	
 
 def plotAccum():
         # Generates a plot stream from read_avgIQ_snap(). To view, run plotAvgIQ.py in a separate terminal
@@ -189,8 +198,8 @@ def dataCollect4Chan(chan1, chan2, chan3, chan4, lines):
 	runtime = lines * 10
 	count1 = 0
 	rate = 16
-	file = open('%d_sec_lock_in_accum_%d_%d_%d_%d.csv'%(runtime, chan1,chan2,chan3,chan4), 'w')
-	#file = open('%d_sec_hoh_spec_accum_%d_%d_%d_%d.csv'%(runtime, chan1,chan2,chan3,chan4), 'w')
+	#file = open('%d_sec_lock_in_accum_%d_%d_%d_%d.csv'%(runtime, chan1,chan2,chan3,chan4), 'w')
+	file = open('%d_sec_hoh_spec_accum_%d_%d_%d_%d.csv'%(runtime, chan1,chan2,chan3,chan4), 'w')
 	writer = csv.writer(file)
 	seconds_per_line = 10
 	cols = rate * seconds_per_line
